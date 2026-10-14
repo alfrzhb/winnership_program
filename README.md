@@ -1,145 +1,245 @@
-# UMY Alumni Tracer - Laravel Web Application
+# UMY Alumni Tracer — Laravel UI Slicing
 
-## Deskripsi Project
+**Prototipe landing page Alumni Tracer dan Career Development Center (CDC) Universitas Muhammadiyah Yogyakarta (UMY), dibuat dengan Laravel Blade dan Tailwind CSS.**
 
-Project ini adalah hasil **slicing** dari desain UI yang terdapat pada file `ui.jpg`. Website ini merupakan implementasi sistem Alumni Tracer untuk Universitas Muhammadiyah Yogyakarta (UMY) yang dibuat menggunakan framework Laravel dengan desain yang responsive dan modern.
+Repository ini merupakan latihan **mengimplementasikan desain antarmuka menjadi halaman web** berdasarkan gambar referensi [`ui.jpg`](ui.jpg). Fokus utamanya adalah komposisi halaman, komponen visual, layout responsif, dan integrasi view dengan controller Laravel.
 
-## Sumber Desain
+> **Status: UI prototype / slicing exercise.** Halaman utama sudah memiliki implementasi Blade, tetapi sistem ini **belum** menyediakan login, pengisian kuesioner, CV builder, job portal, maupun pelacakan data alumni yang fungsional. Angka statistik adalah data contoh yang di-hardcode, bukan hasil query database.
 
-- **File Desain**: `ui.jpg`
-- **Konsep**: Alumni Tracer System untuk UMY
-- **Implementasi**: Laravel + Tailwind CSS
+## Tampilan dan fitur yang tersedia
 
-## Fitur yang Diimplementasikan
+Halaman `/` mencakup:
 
-### 🎨 UI Components
-- **Header Navigation** dengan logo UMY CDC dan menu navigasi
-- **Hero Section** dengan judul utama dan gambar profil
-- **Services Section** menampilkan Data Kuesioner dan CV Builder
-- **Career Development Center** section dengan deskripsi lengkap
-- **Statistics Section** dengan data visual yang menarik
+| Bagian | Implementasi |
+| --- | --- |
+| Header | Identitas teks UMY CDC, navigasi desktop, dan tombol "Masuk" |
+| Hero | Judul Alumni Tracer, deskripsi, gambar ilustrasi, serta badge respons |
+| Layanan | Dua kartu presentasi: **Data Kuesioner** dan **CV Builder** |
+| Career Development Center | Informasi CDC beserta ilustrasi |
+| Statistik | Lima kategori statistik dengan angka dan progress bar contoh |
+| Responsivitas | Grid dan spacing responsif menggunakan utility classes Tailwind |
+| Interaksi visual | Hover effect, warna, shadow, dan transisi sederhana |
 
-### 📱 Responsive Design
-- Mobile-first approach menggunakan Tailwind CSS
-- Grid system yang fleksibel untuk berbagai ukuran layar
-- Hover effects dan transisi yang smooth
+### Status interaksi
 
-### 🛠️ Technical Features
-- **Framework**: Laravel 11.x
-- **Styling**: Tailwind CSS (via CDN)
-- **Architecture**: MVC Pattern
-- **Database**: SQLite (default)
-- **Images**: Unsplash API untuk placeholder images
+| Elemen UI | Status sebenarnya |
+| --- | --- |
+| Menu Beranda, Kuesioner, Laporan, Kontak | Tautan `href="#"`; belum terhubung ke route aplikasi |
+| Tombol Masuk | Elemen tombol tanpa handler atau halaman autentikasi |
+| Tombol Mulai Sekarang | Elemen tombol tanpa action |
+| Mulai Mengisi Kuesioner | Tautan placeholder, bukan formulir |
+| Buat CV | Tautan placeholder, bukan CV builder |
+| Statistik Alumni | Data statis dari `HomeController` |
+| Foto pada halaman | Gambar eksternal dari URL Unsplash |
 
-## Struktur Project
+**Tidak ada autentikasi alumni, formulir kuesioner, pengelolaan CV, dashboard admin, maupun API tracer study dalam implementasi yang diperiksa.**
 
+## Teknologi
+
+| Area | Implementasi di repository |
+| --- | --- |
+| Backend framework | **Laravel 12**, PHP **8.2+** |
+| Template | Laravel Blade |
+| Styling halaman aktif | **Tailwind CSS melalui CDN**, plus CSS kecil di layout Blade |
+| Paket frontend terpasang | Tailwind CSS **4**, Vite **7**, Laravel Vite Plugin |
+| Database default | SQLite di `.env.example` |
+| Package manager | Composer, npm |
+| Pengujian awal | PHPUnit, dengan contoh unit test dan route smoke test |
+
+**Penting:** file konfigurasi Vite dan Tailwind lokal ada di repository, tetapi layout halaman aktif menggunakan `<script src="https://cdn.tailwindcss.com"></script>`. Template `home.blade.php` tidak membutuhkan kompilasi Vite untuk mendapatkan styling yang terlihat di source saat ini. Menjalankan `npm run dev` bukan persyaratan untuk memuat stylesheet CDN tersebut.
+
+## Alur aplikasi
+
+```mermaid
+flowchart LR
+    U["Pengunjung browser"] --> R["GET /"]
+    R --> C["HomeController@index"]
+    C --> D["Statistik statis (array PHP)"]
+    C --> V["resources/views/home.blade.php"]
+    D --> V
+    V --> L["layouts/app.blade.php"]
+    L --> B["Halaman landing page"]
+    B --> T["Tailwind CSS dari CDN"]
+    B --> I["Gambar Unsplash"]
 ```
-├── app/Http/Controllers/HomeController.php  # Controller utama
-├── resources/views/
-│   ├── layouts/app.blade.php               # Layout template
-│   └── home.blade.php                      # Halaman utama
-├── routes/web.php                          # Route configuration
-└── ui.jpg                                  # File desain asli
+
+### Route dan controller
+
+Hanya satu route aplikasi yang didefinisikan di [`routes/web.php`](routes/web.php):
+
+```php
+Route::get('/', [HomeController::class, 'index'])->name('home');
 ```
 
-## Instalasi dan Menjalankan Project
+[`HomeController.php`](app/Http/Controllers/HomeController.php) mengirimkan array `$stats` ke view:
 
-### Prerequisites
-- PHP >= 8.2
-- Composer
-- Node.js (optional)
+```php
+$stats = [
+    'total_alumni'   => 25,
+    'data_kuesioner' => 120,
+    'cv_builder'     => 120,
+    'job_portal'     => 120,
+    'career_center'  => 120,
+];
 
-### Langkah Instalasi
+return view('home', compact('stats'));
+```
 
-1. **Clone repository**
-   ```bash
-   git clone https://github.com/V60Code/winnership_program.git
-   cd winnership_program
-   ```
+Nilai tersebut **bukan data alumni aktual**. Komponen progress bar juga menggunakan lebar persentase yang ditulis langsung pada markup.
 
-2. **Install dependencies**
-   ```bash
-   composer install
-   ```
+### Blade template
 
-3. **Setup environment**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
+- [`resources/views/layouts/app.blade.php`](resources/views/layouts/app.blade.php) menyiapkan HTML, metadata dasar, font Figtree, Tailwind CDN, serta utility CSS tambahan.
+- [`resources/views/home.blade.php`](resources/views/home.blade.php) mendefinisikan header, hero, layanan, pengenalan CDC, dan statistik.
 
-4. **Jalankan migrasi database**
-   ```bash
-   php artisan migrate
-   ```
+UI dirender pada server dengan Blade. Tidak ada React, Vue, Livewire, atau SPA router di halaman utama.
 
-5. **Jalankan development server**
-   ```bash
-   php artisan serve
-   ```
+## Menjalankan secara lokal
 
-6. **Akses aplikasi**
-   Buka browser dan kunjungi: `http://localhost:8000`
+### Persyaratan
 
-## Implementasi Desain
+- **PHP 8.2+**, dengan ekstensi yang diperlukan Laravel.
+- **Composer**.
+- Git untuk cloning.
+- Koneksi internet untuk mengunduh dependensi Composer, Tailwind CSS CDN, dan gambar eksternal.
+- Node.js/npm bersifat **opsional** jika hanya ingin melihat halaman Blade yang sudah menggunakan CDN. Dibutuhkan bila ingin mengembangkan pipeline Vite/Tailwind lokal.
 
-### Perbandingan UI Original vs Implementation
+### 1. Clone
 
-| Komponen | Status | Keterangan |
-|----------|--------|-----------|
-| Header Navigation | ✅ | Fully implemented dengan logo UMY CDC |
-| Hero Section | ✅ | Dengan gambar bulat/persegi dan floating elements |
-| Services Cards | ✅ | Data Kuesioner dan CV Builder cards |
-| CDC Section | ✅ | Career Development Center dengan gambar |
-| Statistics | ✅ | 5 kategori statistik dengan progress bars |
-| Responsive Design | ✅ | Mobile-first approach |
+```bash
+git clone https://github.com/alfrzhb/winnership_program.git
+cd winnership_program
+```
 
-### Customizations Made
-- Gambar menggunakan Unsplash untuk placeholder yang berkualitas
-- Warna dan gradient disesuaikan dengan tema UMY
-- Hover effects dan animasi untuk UX yang lebih baik
-- Typography yang konsisten dan readable
+Branch default repository adalah `master`.
 
-## Best Practices yang Diterapkan
+### 2. Instalasi backend
 
-- ✅ **Clean Code**: Kode yang terstruktur dan mudah dibaca
-- ✅ **MVC Architecture**: Pemisahan logic, view, dan data
-- ✅ **Responsive Design**: Mobile-first approach
-- ✅ **SEO Friendly**: Proper HTML structure dan meta tags
-- ✅ **Performance**: Optimized CSS dan minimal dependencies
-- ✅ **Maintainable**: Reusable components dan layouts
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-## Screenshots
+Pada Windows tanpa perintah `cp`, salin `.env.example` menjadi `.env` menggunakan File Explorer atau PowerShell:
 
-### Desktop View
-![Desktop View](ui.jpg)
-*Desain original yang dijadikan referensi*
+```powershell
+Copy-Item .env.example .env
+```
 
-### Features Implemented
-- Modern gradient backgrounds
-- Card-based layout design
-- Interactive hover effects
-- Responsive grid system
-- Clean typography
+Untuk menggunakan database lokal SQLite seperti pada `.env.example`, buat `database/database.sqlite` apabila belum tersedia, kemudian jalankan:
 
-## Technology Stack
+```bash
+php artisan migrate
+```
 
-- **Backend**: Laravel 11.x
-- **Frontend**: Blade Templates + Tailwind CSS
-- **Database**: SQLite
-- **Images**: Unsplash API
-- **Icons**: Heroicons (SVG)
+**Catatan:** database dipersiapkan untuk instalasi Laravel. **Landing page Alumni Tracer tidak melakukan query alumni ke database** dan dapat dipahami dari struktur controller/view tanpa migrasi alumni.
 
-## Kontribusi
+### 3. Jalankan server
 
-Project ini dibuat sebagai bagian dari tugas slicing UI design menjadi aplikasi web yang fungsional menggunakan Laravel framework.
+```bash
+php artisan serve
+```
 
-## License
+Buka **http://localhost:8000**.
 
-Project ini menggunakan [MIT License](https://opensource.org/licenses/MIT).
+### 4. Frontend tooling (opsional)
+
+Repository juga menyertakan toolchain Vite:
+
+```bash
+npm install
+npm run dev
+```
+
+Untuk menyiapkan aset build lokal:
+
+```bash
+npm run build
+```
+
+Namun, **layout Blade yang sedang digunakan masih mengambil Tailwind dari CDN**. Jika ingin memakai pipeline lokal sepenuhnya, integrasikan hasil Vite ke layout dan pastikan CSS/JS yang dipakai cocok dengan konfigurasi build.
+
+## Struktur repository
+
+```text
+winnership_program/
+├── README.md
+├── ui.jpg                            # Referensi desain, bukan screenshot hasil aplikasi
+├── composer.json                     # Laravel 12 dan dependensi PHP
+├── package.json                      # Vite 7, Tailwind CSS 4
+├── artisan
+├── routes/
+│   └── web.php                       # GET /
+├── app/
+│   └── Http/Controllers/
+│       └── HomeController.php        # Menyediakan statistik statis
+├── resources/
+│   ├── views/
+│   │   ├── layouts/app.blade.php     # Layout HTML dan Tailwind CDN
+│   │   └── home.blade.php            # Landing page Alumni Tracer
+│   ├── css/app.css                   # Konfigurasi CSS untuk pipeline lokal
+│   └── js/app.js
+├── database/
+│   └── migrations/                   # Migrasi Laravel bawaan
+├── tests/
+│   ├── Feature/ExampleTest.php       # Memeriksa response GET /
+│   └── Unit/ExampleTest.php          # Contoh unit test bawaan
+└── vite.config.js
+```
+
+## Desain referensi
+
+![Referensi desain UMY Alumni Tracer](ui.jpg)
+
+*Gambar di atas merupakan **referensi desain asli**, bukan screenshot hasil implementasi yang diverifikasi.*
+
+Website mengambil inspirasi visual dari gambar tersebut, meliputi header, hero, layanan dan area statistik. Foto yang dipakai pada Blade adalah gambar ilustratif eksternal, bukan dokumentasi alumni UMY.
+
+## Testing
+
+Proyek memiliki konfigurasi PHPUnit dan dua contoh pengujian:
+
+- `tests/Feature/ExampleTest.php` memeriksa bahwa `GET /` mengembalikan status HTTP `200`.
+- `tests/Unit/ExampleTest.php` berisi contoh assertion sederhana.
+
+Jalankan:
+
+```bash
+php artisan test
+```
+
+Pengujian tersebut **belum** memvalidasi responsivitas, tampilan visual, aksesibilitas, maupun fungsi kuesioner/login karena fitur-fitur tersebut belum dibuat.
+
+**Audit README ini tidak menjalankan Composer install, server Laravel, build Vite, atau pengujian otomatis.** Instruksi di atas merujuk pada struktur dan konfigurasi yang terdapat di source.
+
+## Keterbatasan dan pekerjaan berikutnya
+
+1. **UI slicing, bukan sistem tracer study lengkap.** Tidak ada model, tabel, API, atau fitur untuk menyimpan dan menganalisis data alumni.
+2. **Navigasi belum terhubung.** Tautan `#` dan tombol tanpa action masih perlu dihubungkan ke route/fungsi yang benar.
+3. **Statistik demonstrasi.** Angka dari controller dan lebar progress bar belum berasal dari data aktual.
+4. **Aset eksternal.** Foto menggunakan URL Unsplash dan stylesheet aktif menggunakan Tailwind CDN; tampilan bergantung pada ketersediaan sumber tersebut.
+5. **Identitas institusi.** Logo pada header berupa lingkaran teks "UMY" dan "CDC", bukan file identitas resmi yang diverifikasi. Ini prototipe yang memakai konteks institusi sebagai referensi desain.
+6. **Dua jalur styling.** Tailwind CDN dipakai oleh layout, sementara package proyek juga menyertakan pipeline Vite/Tailwind lokal. Sebaiknya disatukan sebelum deployment.
+7. **Responsivitas belum diuji lintas viewport.** Utility responsive sudah ada, tetapi menu desktop yang disembunyikan pada layar kecil belum diganti dengan kontrol mobile yang fungsional.
+8. **Belum ada screenshot implementasi.** `ui.jpg` adalah sumber desain, bukan bukti pixel-perfect atau hasil tes browser.
+9. **Pengujian minimal.** Belum ada automated browser test maupun pengujian interaksi halaman.
+
+### Usulan pengembangan
+
+- Perbaiki navigasi dan CTA dasar, termasuk pengalaman mobile.
+- Tentukan apakah proyek akan tetap menjadi **demo UI** atau dikembangkan menjadi tracer study sungguhan.
+- Jika dikembangkan: rancang skema alumni, autentikasi, kuesioner, CV builder, dan pelaporan beserta kontrol akses.
+- Buat statistik berbasis query yang dapat diuji; hindari menampilkan data contoh sebagai data institusi.
+- Konsolidasikan styling dan jalankan pengujian responsive/accessibility sebelum publikasi.
+- Tambahkan screenshot hasil implementasi yang diambil dari browser.
+
+## Lisensi
+
+`composer.json` mendeklarasikan lisensi **MIT** untuk template aplikasi Laravel. **Tidak ditemukan file `LICENSE` di root repository yang diperiksa**, sehingga cakupan lisensi terhadap keseluruhan kode, desain referensi, dan aset pihak ketiga tidak dapat disimpulkan hanya dari metadata tersebut.
 
 ---
 
-**Dibuat dengan ❤️ menggunakan Laravel & Tailwind CSS**
+**Repository:** [alfrzhb/winnership_program](https://github.com/alfrzhb/winnership_program) · **Branch:** `master`
 
-*Slicing dari ui.jpg - UMY Alumni Tracer System*
+Dokumentasi ini berlandaskan source code yang diperiksa dan membedakan secara eksplisit **fitur UI yang sudah tersedia** dari **fitur sistem yang belum diimplementasikan**.
